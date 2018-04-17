@@ -25,7 +25,11 @@
                 "pole": "north",    // Which half of the boom is the carriage on. North or South
                 "color": "red",     // Color of the pen
                 "offsetX": 15,      // X Offset of pen tip from center of boom width
-            }]
+            }],
+        },
+        "clock": {
+            "tickInterval": 5,      // Interval in degrees between tick marks
+            "LabelInterval": 15     // Interval in degrees between tick labels
         }
     };
     
@@ -41,10 +45,10 @@
     var boomAngle = 0;
     var north = null;
     var south = null;
-
     var jobs = []
     var job_id = 0;
     var selectedPen = null;
+    var drawLayer = null;
 
     // ----------------------------------------------------
     // Belt Position
@@ -269,7 +273,7 @@
             .endAngle(2 * Math.PI);
         svg.append("path")
             .attr("d", arc)
-            .attr("class", "draw-zones")
+            .attr("class", "drawable-area")
             .attr("transform", "translate("+drawing.ox+","+drawing.oy+")");
 
         // Clock face      
@@ -283,12 +287,12 @@
 			.attr('x1',0)
 			.attr('x2',0)
 			.attr('y1',drawing.radius)
-			.attr('y2',drawing.radius-5)
+			.attr('y2',drawing.radius - 5)
 			.attr('transform',function(d){
-				return 'rotate(' + d * 5 + ')';
+				return 'rotate(' + d * config.clock.tickInterval + ')';
 			});
         var radian = Math.PI / 180;
-        var interval = 15;
+        var interval = config.clock.LabelInterval;
         var labelRadius = drawing.radius - 20;
         face.selectAll('.degree-label')
 		    .data(d3.range(0,360/interval))
@@ -393,8 +397,10 @@
                 var point = d3.mouse(this);
                 mouseLine.attr("x2", point[0]).attr("y2", point[1]);
                 var trans = pointTransform(point);
-                trans.inDrawSpace = (trans.radius >= config.scaled.drawStart && trans.radius <= config.scaled.drawEnd );
-                rootElem.trigger( "mousemove", trans );   
+                if (trans!==undefined) {
+                    trans.inDrawSpace = (trans.radius >= config.scaled.drawStart && trans.radius <= config.scaled.drawEnd );
+                    if (trans.radius <= drawing.radius) rootElem.trigger( "mousemove", trans );   
+                }
                 d3.event.stopPropagation();
             })
             .on("mouseout", function () {
@@ -410,13 +416,41 @@
             });
     };
 
-    var buildStats = function(svg) {
-        svg.append('text')
-         .attr("x", 10)
-         .attr("y", 20)
-         .text("")
-         .attr("class", "stat stat-angle");
-    };
+    var buildDrawLayer = function(svg) {
+        drawLayer = svg.append("g");
+    }
+
+    // var buildStats = function(svg) {
+    //     svg.append('text')
+    //      .attr("x", 10)
+    //      .attr("y", 20)
+    //      .text("")
+    //      .attr("class", "stat stat-angle");
+    // };
+
+    // ----------------------------------------------------
+    // Drawing
+    // ----------------------------------------------------
+
+    var drawClean = function() {
+        drawLayer.selectAll("*").remove();
+        return this;
+    }
+
+    var lineFunction = d3.line()
+        .x(function(d) { return d.x; })
+        .y(function(d) { return d.y; })
+        .curve(d3.curveBasis);
+    
+    var drawPath = function(pathData) {
+        drawLayer.append("path")
+        .attr("d", lineFunction(pathData))
+        .attr("stroke", "blue")
+        .attr("stroke-width", 2)
+        .attr("fill", "none");
+        return this;
+    }
+
 
     // ----------------------------------------------------
     // Config
@@ -448,6 +482,7 @@
     $.fn.roplot = function(device_config) {
         // Set root element
         rootElem = this;
+        rootElem.addClass('roplot');
         // Calc space on which we can draw
         drawing.radius = Math.min(rootElem.width(), rootElem.height()) / 2;
         drawing.ox = drawing.radius;
@@ -462,6 +497,7 @@
             .attr("height", drawing.radius * 2);
 
         buildSurface(svg);
+        buildDrawLayer(svg);
         buildBoom(svg);
         buildCarriages(svg);
         buildClickLayer(svg);
@@ -470,7 +506,9 @@
     };
 
     $.fn.boomTo = rotateBoom;
-    $.fn.carTo = moveCarriages
- 
+    $.fn.carTo = moveCarriages;
+
+    $.fn.drawPath  = drawPath;
+    $.fn.drawClean = drawClean;
 
 })($);
