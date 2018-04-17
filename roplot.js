@@ -75,10 +75,10 @@
     // ----------------------------------------------------
     
     var log = function() {
-        var msg = "";
-        for (x in arguments) msg += " "+arguments[x];
-        $('#log ul').append('<li>'+msg+'</li>');
-        $('#log .panel-scroller').scrollTop($('#log ul').height());
+        // var msg = "";
+        // for (x in arguments) msg += " "+arguments[x];
+        // $('#log ul').append('<li>'+msg+'</li>');
+        // $('#log .panel-scroller').scrollTop($('#log ul').height());
         console.log(arguments);
     };
 
@@ -420,14 +420,6 @@
         drawLayer = svg.append("g");
     }
 
-    // var buildStats = function(svg) {
-    //     svg.append('text')
-    //      .attr("x", 10)
-    //      .attr("y", 20)
-    //      .text("")
-    //      .attr("class", "stat stat-angle");
-    // };
-
     // ----------------------------------------------------
     // Drawing
     // ----------------------------------------------------
@@ -437,17 +429,35 @@
         return this;
     }
 
-    var lineFunction = d3.line()
-        .x(function(d) { return d.x; })
-        .y(function(d) { return d.y; })
-        .curve(d3.curveBasis);
+    var curveTypes = {
+        "linear": d3.curveLinear,
+        "step": d3.curveStep,
+        "stepBefore": d3.curveStepBefore,
+        "stepAfter": d3.curveStepAfter,
+        "basis": d3.curveBasis,
+        "cardinal": d3.curveCardinal,
+        "monotoneX": d3.curveMonotoneX,
+        "catmullRom": d3.curveCatmullRom
+    };
+            
+    var lineFunction = function(offset, pathData, curveFunction) {
+        var cFunc = curveTypes[curveFunction];
+        if (cFunc === undefined) throw "Unknown curve function";
+        return (d3.line()
+            .x(function(d) { return offset + scale(d.x); })
+            .y(function(d) { return offset + scale(d.y); })
+            .curve(cFunc)
+        )(pathData);
+    }
     
-    var drawPath = function(pathData) {
+    var drawPath = function(ref, pathData, penWidth=2, penColor="blue", curveFunction='linear') {
+        var offset = drawing.radius - config.scaled.drawEnd;
         drawLayer.append("path")
-        .attr("d", lineFunction(pathData))
-        .attr("stroke", "blue")
-        .attr("stroke-width", 2)
-        .attr("fill", "none");
+        .attr("d", lineFunction(offset, pathData, curveFunction))
+        .attr("stroke", penColor)
+        .attr("stroke-width", scale(penWidth))
+        .attr("fill", "none")
+        .attr('id', 'path-'+ref);
         return this;
     }
 
@@ -490,8 +500,6 @@
         // Update configuration
         updConfig(device_config);
         
-        console.log([drawing.radius]);
-
         svg = d3.select("#"+this.prop('id')).append("svg")
             .attr("width", drawing.radius * 2)
             .attr("height", drawing.radius * 2);
@@ -501,7 +509,6 @@
         buildBoom(svg);
         buildCarriages(svg);
         buildClickLayer(svg);
-
         return this;
     };
 

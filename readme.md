@@ -1,5 +1,5 @@
 # Roplot Visualiser
-This repository holds a Javascript visualisation specifically designed for the [Roplot](http://roplot.com/) drawing robot. The visualisation depicts the drawing robot and can be animate simulate the movements of the physical Roplot drawing robot.
+This repository holds a Javascript visualisation specifically designed for the [Roplot](http://roplot.com/) drawing robot. The visualisation depicts the drawing robot and can be animate simulate the movements of the physical Roplot drawing robot and the output it will draw.
 
 ![Screenshot of visualisation](_res/example.png)
 
@@ -80,4 +80,32 @@ The **click** and **mousemove** events return details of the mouse position rela
     originalY: 371      // Y Position relative to top left of element
     radius: 211.22      // Distance between mouse and pivot 
 } 
+```
+
+## Drawing
+If you want to display something on the drawable area i.e. demonstrate what will be drawn, you can use the following functions:
+
+### Draw Path
+Units are in mm and should be scaled to suite the dimensions of your drawing machine. You can also specify a curve function: "linear", "step", "stepBefore", "stepAfter", "basis", "cardinal", "monotoneX" and "catmullRom". See [this Dashing D3 article](https://www.dashingd3js.com/svg-paths-and-d3js) for more information.
+
+```js
+var penWidth = 15; //mm
+var penColor = "blue";
+var curveFunction='linear';
+var path = [ 
+        { "x": 1,   "y": 5},  
+        { "x": 20,  "y": 20},
+        { "x": 40,  "y": 10}, 
+        { "x": 60,  "y": 40},
+        { "x": 80,  "y": 5},  
+        { "x": 100, "y": 60}
+    ];
+$('#roplotter').drawPath(path, penWidth, penColor, curveFunction);
+```
+
+
+To erase everything in the drawable area:
+
+```js
+$('#roplotter').drawClean();
 ```
