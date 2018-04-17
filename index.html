@@ -3,11 +3,23 @@
 <head>
 <title>Roplot Visualiser</title>
 <link href="roplot.css" rel="stylesheet">
+<style>
+    body {
+        background-color: #eee;
+        margin: 0;
+        padding: 0;
+    }
+    #roplotter {
+        width: 90vw;
+        height: 90vh;
+    }
+</style>
 </head>
 
 <body>
-    <div id="roplotter" style="width: 80vw; height: 80vh;"></div>
-
+    
+    <div id="roplotter"></div>
+    
     <script src="https://d3js.org/d3.v5.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
     <script src="roplot.js"></script>
@@ -15,12 +27,19 @@
         $('#roplotter').roplot()
             .carTo(250)
             .boomTo(45)
-            
+            .drawPath([ 
+                { "x": 1,   "y": 5},  
+                { "x": 20,  "y": 20},
+                { "x": 40,  "y": 10}, 
+                { "x": 60,  "y": 40},
+                { "x": 80,  "y": 5},  
+                { "x": 100, "y": 60}
+            ])
             .on('click', function(e, details) { console.log(details); })
-            .on('mousemove', function(e, details) { console.log(details); })
+            //.on('mousemove', function(e, details) { console.log(details); })
             .on('boomAnimEnd', function(e) { console.log(e); })
             .on('carAnimEnd', function(e) { console.log(e); });
-     
+
 
     </script>
 </body>

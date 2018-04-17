@@ -10,7 +10,8 @@ This repository holds a Javascript visualisation specifically designed for the [
 ## Basics
 The project is structured as a JQuery Plugin. It can be initialised as follows:
 
-```javascript
+```html
+    <link href="roplot.css" rel="stylesheet">
     <script src="https://d3js.org/d3.v5.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
     <script src="roplot.js"></script>
@@ -29,6 +30,10 @@ The project is structured as a JQuery Plugin. It can be initialised as follows:
                     "color": "red",     // Color of the pen
                     "offsetX": 15,      // X Offset of pen tip from center of boom width
                 }]
+            },
+            "clock": {
+                "tickInterval": 5,      // Interval in degrees between tick marks
+                "LabelInterval": 15     // Interval in degrees between tick labels
             }
         }
         $('#roplotter').roplot(settings);
@@ -38,13 +43,13 @@ The project is structured as a JQuery Plugin. It can be initialised as follows:
 To rotate the boom:
 
 ```js
-$('#roplotter').boomTo(degrees);
+$('#roplotter').boomTo(degrees); // Where 'degrees' is an integer between 0 and 359
 ```
 
 To move the pen carriage:
 
 ```js
-$('#roplotter').carTo(mm);
+$('#roplotter').carTo(mm); // Where 'mm' is the physical distance from the pivot to the destination of the pen tip
 ```
 
 ## Events
@@ -62,7 +67,7 @@ $('#roplotter').on('click', function(e, details) { console.log(details); });
 | carAnimEnd    | When the carriage animation ends |
 
 
-The *click* and *mousemove* events return details of the mouse position relative to the center of the plotter i.e. its point of pivot.
+The **click** and **mousemove** events return details of the mouse position relative to the center of the plotter i.e. its point of pivot.
 
 ```js
 {
