@@ -24,17 +24,39 @@
     <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
     <script src="roplot.js"></script>
     <script>
-        $('#roplotter').roplot()
+        var settings = {
+            "physical": { 
+                "boomRadius": 500,      
+                "boomWidth": 20,        
+                "boomColor": "gray",    
+                "drawStart": 100,      
+                "drawEnd": 450,
+                "carWidth": 40, 
+                "carHeight": 40,
+            }
+        };
+        
+        $('#roplotter').roplot(settings)
             .carTo(250)
             .boomTo(45)
-            .drawPath([ 
-                { "x": 1,   "y": 5},  
-                { "x": 20,  "y": 20},
-                { "x": 40,  "y": 10}, 
-                { "x": 60,  "y": 40},
-                { "x": 80,  "y": 5},  
-                { "x": 100, "y": 60}
-            ])
+            .drawPath('patha', [ 
+                { "x": 450,   "y": 0},  
+                { "x": 550,  "y": 350},
+                { "x": 900,  "y": 450},
+                { "x": 550,  "y": 550},
+                { "x": 450,  "y": 900},
+                { "x": 350,  "y": 550},
+                { "x": 0,    "y": 450}, 
+                { "x": 350,  "y": 350},
+                { "x": 450,  "y": 0}, 
+            ], 5, "green")
+            .drawPath('patha', [ 
+                { "x": 450,   "y": 0},  
+                { "x": 900,  "y": 450},
+                { "x": 450,  "y": 900},
+                { "x": 0,    "y": 450}, 
+                { "x": 450,  "y": 0}, 
+            ], 5, "blue")
             .on('click', function(e, details) { console.log(details); })
             //.on('mousemove', function(e, details) { console.log(details); })
             .on('boomAnimEnd', function(e) { console.log(e); })
