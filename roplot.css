@@ -1,0 +1,155 @@
+body {
+    padding: 10px;
+    margin: 0;
+    background-color: #f7f7f7;
+    overflow: hidden;
+}
+
+#logo {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    width: 200px;
+    height: 60px;
+}
+
+#logo img {
+    height: 100%;
+    text-align: left;
+    margin-bottom: 10px;
+}
+
+#log {
+    position: relative;
+    height: 200px;
+    overflow: hidden;
+}
+
+.panel-scroller {
+    position: absolute;
+    top: 42px;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.draw-zones {
+    fill: #e5f6ff;
+}
+
+.draw-marker {
+    fill: #4a8049;
+}
+
+.hub {
+    fill: #f7f7f7
+}
+.beltpos-ring {
+    stroke: white;
+    stroke-width: 2px;
+    fill: transparent;
+}
+
+.mouse-line {
+    stroke: red;
+    stroke-width: 3px;
+    stroke-dasharray: 10;
+    stroke-linecap: round;
+}
+
+
+
+
+#vis {
+    position: absolute;
+    left: 0;
+    top: 10px;
+    right: 355px;
+    bottom: 10px;
+}
+
+#right_menu {
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: 100%;
+    width: 350px;
+    padding: 10px;
+    overflow-y: scroll;
+    overflow-x: hidden;
+}
+
+
+
+
+#pen_list  {
+    position: relative;
+    width: 100%;
+}
+
+#right_menu .list-group-item {
+    padding: 5px;
+}
+
+#pen_list li {
+    cursor: pointer;
+}
+
+#pen_list li.list-title {
+    background-color: #e8fdff;
+    font-weight: 900;
+    cursor: default;
+}
+
+#pen_list li.selected {
+    font-weight: 900;
+    color: #3e56b2;
+}
+
+
+#job_list {
+    position: relative;
+    width: 100%;
+
+}
+
+#job_list .complete .row div {
+    text-decoration: line-through;
+}
+
+#job_list .current {
+    font-weight: 900;
+    color: green;
+}
+
+.carriage {
+    fill: #000;
+}
+
+.draw-surface {
+    fill: white;
+}
+
+.stat {
+    font-family: 'Lucida Grande', 'Lucida Sans Unicode', 'Geneva', 'Verdana', sans-serif;
+    font-size: 12px;
+}
+
+.degree-tick {
+    stroke: #eee;
+    stroke-width: 2px;
+}
+
+.degree-label {
+    fill: #eee;
+}
+
+.remove-job {
+    cursor: pointer;
+}
+
+.boom-angle-marker {
+    fill: #eee;
+}
