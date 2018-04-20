@@ -20,11 +20,26 @@
             "drawEnd": 450,         // Distance from boom center where carriage stops - outer
             "carWidth": 20,         // Carriage Width - axis normal to boom
             "carHeight": 20,        // Carriage Height - axis parallel to boom
+            "boomStep": 0.9,        // Boom stepper motor step size
+            "carStep": 1.5,         // Carriage stepper motor step size
             "pens": [{
                 "id": 1,
                 "pole": "north",    // Which half of the boom is the carriage on. North or South
                 "color": "red",     // Color of the pen
-                "offsetX": 15,      // X Offset of pen tip from center of boom width
+                "width": 5,
+                "offset": {          // X Offset of pen tip from center of boom width
+                    x: 25,
+                    y: 0
+                }
+            },{
+                "id": 2,
+                "pole": "south",     // Which half of the boom is the carriage on. North or South
+                "color": "blue",     // Color of the pen
+                "width": 5,
+                "offset": {          // X Offset of pen tip from center of boom width
+                    x: 25,
+                    y: 0
+                }
             }],
         },
         "clock": {
@@ -40,46 +55,36 @@
         "padding": 40,
     }
 
+    const CAR_OUT = 1;
+    const CAR_IN = 2;
+    const ROTATE_CW = 1;
+    const ROTATE_AC = 2;  
+    const PEN_UP = 1;
+    const PEN_DOWN = 2;
+
     var svg = null;
     var boom = null;
     var boomAngle = 0;
     var north = null;
     var south = null;
-    var jobs = []
-    var job_id = 0;
-    var selectedPen = null;
     var drawLayer = null;
-
-    // ----------------------------------------------------
-    // Belt Position
-    // ----------------------------------------------------
-    
-    var physicalBeltPos = null;
-
-    var getBeltPosition = function(scaled=false) {
-        if (physicalBeltPos === null) setBeltPosition(config.physical.drawStart);
-        if (scaled) return scale(physicalBeltPos);
-        return physicalBeltPos;
-    }
-
-    var setBeltPosition = function(value, is_scaled=false) {
-        if (is_scaled) { 
-            physicalBeltPos = scale(value);
-        } else {
-            physicalBeltPos = value;
-        }
-    }
+    var physicalBeltPos = config.physical.drawStart;
+    var penState = []
 
     // ----------------------------------------------------
     // Helpers
     // ----------------------------------------------------
     
+    var getConfig = function() {
+        return config;
+    }
+
     var log = function() {
         // var msg = "";
         // for (x in arguments) msg += " "+arguments[x];
         // $('#log ul').append('<li>'+msg+'</li>');
         // $('#log .panel-scroller').scrollTop($('#log ul').height());
-        console.log(arguments);
+        // console.log(arguments);
     };
 
     // Take an xy from top left and convert to a point from center of circle
@@ -127,126 +132,36 @@
     // Boom
     // ----------------------------------------------------
 
-    var animateBoom = function(to_angle, cb=null) {
-        // Swing it baby
-        boom.transition()
-            .duration(function () {
-                var distance = Math.max(boomAngle, to_angle) - Math.min(boomAngle, to_angle);
-                return config.rotationSpeed * distance;
-            })
-            .attrTween("transform", function() {
-                return d3.interpolateString("rotate("+boomAngle+", "+drawing.ox+", "+drawing.ox+")", "rotate("+to_angle+", "+drawing.oy+", "+drawing.oy+")");
-            })
-            .on("end", function () {
-                rootElem.trigger('boomAnimEnd');
-                // if (cb) cb();
-                // $('.stat-angle').html('Angle: '+Math.round(boomAngle)+"&deg;");
-            });
-    };
-
-
-    var rotateBoom = function(abs_angle, cb, force_dir) {
-        // Make sure its a number
-        abs_angle = abs_angle * 1;
-        // Is the boom already at the angle
-        if (abs_angle===boomAngle) {
-            log("Already at angle ", abs_angle);
-            if (cb) cb();
-            return;
-        }
-
-        var CW  = 1;
-        var CCW = -1;
-        var is_forced = false;
-        if (typeof force_dir !==undefined) { is_forced = true; }
-
-        // Calc different distances
-        var dir = (abs_angle > boomAngle) ? CW : CCW;
-        var diff_cw=0, diff_ccw=0;
-        if (dir===CW) {
-            diff_cw  = Math.abs(abs_angle - boomAngle);
-            diff_ccw = 360 - Math.abs(abs_angle - boomAngle);
-        } else {
-            diff_cw = 360 - Math.abs(abs_angle - boomAngle);
-            diff_ccw  = Math.abs(abs_angle - boomAngle);
-        }
-        log("Route lengths: CCW",Math.round(diff_ccw), " - CW", Math.round(diff_cw));
-
-        // Workout shortest direction of travel
-        var auto_dir = 0;
-        if (diff_ccw > diff_cw) {
-            log("Shortest route is clockwise");
-            auto_dir = 1;
-        } else {
-            log("Shortest route is anticlockwise");
-            auto_dir = -1;
-        }
-
-        var move_cw  = boomAngle + diff_cw % 360;
-        var move_ccw = boomAngle - diff_ccw;
-
-        var to_angle = abs_angle;
-        if (is_forced && force_dir===CW) {
-            log("Forcing direction CW");
-            to_angle = move_cw
-        } else if (is_forced && force_dir===CCW) {
-            log("Forcing direction CCW");
-            to_angle = move_ccw
-        } else if (auto_dir===CW) {
-            to_angle = move_cw
-        } else {
-            to_angle = move_ccw
-        }
-
-        log("Rotating from: ",Math.round(boomAngle), " to: ", Math.round(abs_angle), " moving: ", Math.round(to_angle));
-       
-        animateBoom(to_angle, function() {
-            boomAngle = abs_angle;
-        });
-
-        return this;
-    };
+    var stepBoom = function(direction) {
+        if (direction !== ROTATE_AC && direction !== ROTATE_CW) throw "Unknown direction";
+        var d = (direction === ROTATE_AC) ? -1 : 1;
+        boomAngle = boomAngle + (config.physical.boomStep * d);
+        boom.attr("transform", "rotate("+boomAngle+","+drawing.ox+","+drawing.oy+")");
+    }
 
     // ----------------------------------------------------
     // Carriages
     // ----------------------------------------------------
 
-    var moveCarriages = function(newPhysicalBeltPossition, cb=null) {
-        log("Carriages to new belt position:", newPhysicalBeltPossition);
-        // Check if within draw limits
-        if (newPhysicalBeltPossition > config.physical.drawEnd)   { log("Greater than draw space"); if(cb) cb(false); return; }
-        if (newPhysicalBeltPossition < config.physical.drawStart) { log("Less than draw space");    if(cb) cb(false); return; }
-        // Position from center to move to
-        var from_start = Math.abs(config.physical.drawStart - newPhysicalBeltPossition);
-        log("Belt needs to move", from_start);
-
-        // Direction of travel
-        var direction_of_travel = (from_start > newPhysicalBeltPossition) ? direction_of_travel = 1 : -1;
-        
-        animateCarriages(direction_of_travel, from_start, function() {
-            setBeltPosition(from_start, false);
-        });
-
-        return this;
+    var stepCar = function(direction) {
+        if (direction !== CAR_IN && direction !== CAR_OUT) throw "Unknown direction";
+        var d = (direction === CAR_IN) ? -1 : 1;
+        physicalBeltPos = physicalBeltPos + (config.physical.carStep * d);
+        physicalBeltPos = Math.min(physicalBeltPos, config.physical.drawEnd);
+        physicalBeltPos = Math.max(physicalBeltPos, config.physical.drawStart);     
+        north.attr("transform", "translate(0, "+scale(-physicalBeltPos)+")");
+        south.attr("transform", "translate(0, "+scale(physicalBeltPos)+")");
     }    
     
-    var animateCarriages = function(direction_of_travel, from_start, cb=null) {
-        // Animate belt moving
-        var dur = function () {
-            var distance =  Math.abs(scale(from_start) - getBeltPosition(true));
-            console.log(distance);
-            return config.beltSpeed * distance;
-        };
-        north.transition()
-            .duration(dur)
-            .attr("transform", "translate(0, "+(direction_of_travel * scale(from_start))+")")
-            .on("end", function() { rootElem.trigger('carAnimEnd'); });
-        south.transition()
-            .duration(dur)
-            .attr("transform", "translate(0, "+(-direction_of_travel * scale(from_start))+")");
-        if (cb) cb();
-    };
+    // ----------------------------------------------------
+    // Pen
+    // ----------------------------------------------------
 
+    var setPenState = function(penIndex, newState) {
+        if (penIndex >= penState.length ) throw "Unknown pen index";
+        if (newState !== PEN_DOWN && newState !== PEN_UP) throw "Unknown pen state";
+        penState[penIndex] = newState;
+    }
 
     // ----------------------------------------------------
     // Build
@@ -348,19 +263,23 @@
             .attr('class', 'carriage')
             .attr("x", drawing.ox - config.scaled.carWidth / 2)
             .attr("y", function () {
-                return drawing.oy - config.scaled.drawStart - config.scaled.carHeight / 2;
+                return drawing.oy - config.scaled.carHeight / 2;
             })
             .attr("width", config.scaled.carWidth)
             .attr("height", config.scaled.carHeight);
+        
+        north.attr("transform", "translate(0, "+scale(-physicalBeltPos)+")");
 
         south.append("rect")
             .attr('class', 'carriage')
             .attr("x", drawing.ox - config.scaled.carWidth / 2)
             .attr("y", function () {
-                return drawing.oy + config.scaled.drawStart  - config.scaled.carHeight / 2;
+                return drawing.oy - config.scaled.carHeight / 2;
             })
             .attr("width", config.scaled.carWidth)
             .attr("height", config.scaled.carHeight);
+
+        south.attr("transform", "translate(0, "+scale(physicalBeltPos)+")");
 
         // Add pens
         for (i in config.physical.pens) {
@@ -370,12 +289,10 @@
             // Pens
             pen.circle = pole.append("circle")
                 .attr('class', 'pen')
+                .attr("id", "pen-"+i)
                 .attr("r", 5)
-                .attr("cx", drawing.ox - scale(pen.offsetX))
-                .attr("cy", function() {
-                    var offset = getBeltPosition(true);
-                    if (pole===north) return drawing.oy - offset; else return drawing.oy + offset;
-                })
+                .attr("cx", drawing.ox + scale(pen.offset.x))
+                .attr("cy", drawing.oy + scale(pen.offset.y))
                 .style("fill", pen.color);
         }
     };
@@ -421,48 +338,6 @@
     }
 
     // ----------------------------------------------------
-    // Drawing
-    // ----------------------------------------------------
-
-    var drawClean = function() {
-        drawLayer.selectAll("*").remove();
-        return this;
-    }
-
-    var curveTypes = {
-        "linear": d3.curveLinear,
-        "step": d3.curveStep,
-        "stepBefore": d3.curveStepBefore,
-        "stepAfter": d3.curveStepAfter,
-        "basis": d3.curveBasis,
-        "cardinal": d3.curveCardinal,
-        "monotoneX": d3.curveMonotoneX,
-        "catmullRom": d3.curveCatmullRom
-    };
-            
-    var lineFunction = function(offset, pathData, curveFunction) {
-        var cFunc = curveTypes[curveFunction];
-        if (cFunc === undefined) throw "Unknown curve function";
-        return (d3.line()
-            .x(function(d) { return offset + scale(d.x); })
-            .y(function(d) { return offset + scale(d.y); })
-            .curve(cFunc)
-        )(pathData);
-    }
-    
-    var drawPath = function(ref, pathData, penWidth=2, penColor="blue", curveFunction='linear') {
-        var offset = drawing.radius - config.scaled.drawEnd;
-        drawLayer.append("path")
-        .attr("d", lineFunction(offset, pathData, curveFunction))
-        .attr("stroke", penColor)
-        .attr("stroke-width", scale(penWidth))
-        .attr("fill", "none")
-        .attr('id', 'path-'+ref);
-        return this;
-    }
-
-
-    // ----------------------------------------------------
     // Config
     // ----------------------------------------------------
 
@@ -499,6 +374,9 @@
         drawing.oy = drawing.radius;
         // Update configuration
         updConfig(device_config);
+        for (i in config.physical.pens) {
+            penState[i] = PEN_UP;
+        }
         
         svg = d3.select("#"+this.prop('id')).append("svg")
             .attr("width", drawing.radius * 2)
@@ -509,13 +387,113 @@
         buildBoom(svg);
         buildCarriages(svg);
         buildClickLayer(svg);
+        
         return this;
     };
 
-    $.fn.boomTo = rotateBoom;
-    $.fn.carTo = moveCarriages;
+    // ----------------------------------------------------
+    // RAT
+    // ----------------------------------------------------
 
-    $.fn.drawPath  = drawPath;
-    $.fn.drawClean = drawClean;
+    var drawLine = function(pen, x1, y1, x2, y2) {
+        drawLayer.append("line")
+            .attr("x1", x1)
+            .attr("y1", y1)
+            .attr("x2", x2)
+            .attr("y2", y2)
+            .style("stroke-width", scale(pen.width))
+            .style("stroke", pen.color);
+    }
+
+    var drawCircle = function(pen, x1, y1) {
+        drawLayer.append("circle")
+            .attr("r", scale(pen.width/2))
+            .attr("cx", x1)
+            .attr("cy", y1)
+            .style("fill", pen.color);
+    }
+
+    var polarToCart = function(d, r) {
+        return { 
+            x: drawing.ox + (r * Math.cos( degreeToRadian(d-90)) ),
+            y: drawing.oy + (r * Math.sin( degreeToRadian(d-90)) ) 
+        };
+    }
+    
+    var runRat = function(cmdStr) {
+
+        var re = /((?<repeats>\d+)\*)?(?<cmd>PU|PD|RC|RA|CO|CI)(:(?<param>\d+))?/;
+
+        var parsedInstructions = [];
+        var errors = [];
+        $.each(cmdStr.split(','), function (i, instruction) {
+            instruction = instruction.trim();
+            if (instruction == "") return true;
+
+            var parsed = instruction.match(re);
+            if (parsed === null) {
+                errors.push("Unable to parse command: "+instruction+" (#"+i+")");
+                return false;
+            }
+
+            parsedDict = parsed.groups;                
+            parsedDict.repeats = (parsedDict.repeats === undefined) ? 1 : Number.parseInt(parsedDict.repeats);
+            parsedDict.param = (parsedDict.param == undefined) ? null : Number.parseInt(parsedDict.param);
+            parsedInstructions.push(parsedDict)    
+
+        });
+
+        if (errors.length > 0) {
+            console.log(errors);
+            return errors;
+        }
+
+        // Execute parsed instructions
+        $.each(parsedInstructions, function(i, instruction) {
+            for(var i=0; i<instruction.repeats; i++) {
+
+                var lines = {};
+                for (j in penState) {
+                    if (penState[j] == PEN_DOWN) {
+                        lines[j] = { "before": polarToCart(boomAngle, scale(physicalBeltPos)) };
+                    }
+                }
+
+                switch (instruction.cmd) {
+                    case "PU":
+                        setPenState(instruction.param, PEN_UP);
+                        break;
+                    case "PD":
+                        setPenState(instruction.param, PEN_DOWN);
+                        pos = polarToCart(boomAngle, scale(physicalBeltPos));
+                        drawCircle(config.physical.pens[instruction.param], pos.x, pos.y);
+                        break;
+                    case "RC":
+                        stepBoom(ROTATE_CW);
+                        break;
+                    case "RA":
+                        stepBoom(ROTATE_AC);
+                        break;
+                    case "CO":
+                        stepCar(CAR_OUT);
+                        break;
+                    case "CI":
+                        stepCar(CAR_IN);
+                        break;
+                    default:
+                        throw "Unknown RAT command";
+                }
+
+                // Draw ink
+                for (j in lines) {
+                    lines[j]['after'] = polarToCart(boomAngle, scale(physicalBeltPos));
+                    drawLine(config.physical.pens[j], lines[j].before.x, lines[j].before.y, lines[j].after.x, lines[j].after.y);
+                }
+            }
+        })
+    };
+
+    $.fn.runRat = runRat;
+    $.fn.getConfig = getConfig;
 
 })($);

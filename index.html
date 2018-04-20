@@ -17,52 +17,38 @@
 </head>
 
 <body>
-    
     <div id="roplotter"></div>
-    
     <script src="https://d3js.org/d3.v5.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
     <script src="roplot.js"></script>
     <script>
-        var settings = {
-            "physical": { 
-                "boomRadius": 500,      
-                "boomWidth": 20,        
-                "boomColor": "gray",    
-                "drawStart": 100,      
-                "drawEnd": 450,
-                "carWidth": 40, 
-                "carHeight": 40,
-            }
-        };
+    
+        // Initialise the plotter visualisation
+        var roplotter = $('#roplotter').roplot()
+            .on('click', function(e, details) { console.log(details); });
         
-        $('#roplotter').roplot(settings)
-            .carTo(250)
-            .boomTo(45)
-            .drawPath('patha', [ 
-                { "x": 450,   "y": 0},  
-                { "x": 550,  "y": 350},
-                { "x": 900,  "y": 450},
-                { "x": 550,  "y": 550},
-                { "x": 450,  "y": 900},
-                { "x": 350,  "y": 550},
-                { "x": 0,    "y": 450}, 
-                { "x": 350,  "y": 350},
-                { "x": 450,  "y": 0}, 
-            ], 5, "green")
-            .drawPath('patha', [ 
-                { "x": 450,   "y": 0},  
-                { "x": 900,  "y": 450},
-                { "x": 450,  "y": 900},
-                { "x": 0,    "y": 450}, 
-                { "x": 450,  "y": 0}, 
-            ], 5, "blue")
-            .on('click', function(e, details) { console.log(details); })
-            //.on('mousemove', function(e, details) { console.log(details); })
-            .on('boomAnimEnd', function(e) { console.log(e); })
-            .on('carAnimEnd', function(e) { console.log(e); });
-
-
+        // Draw a petal
+        roplotter.runRat("PD:1");
+        var config = roplotter.getConfig();
+        var i=0;
+        var k=4;
+        var d=true;
+        var intervalA = setInterval(function() {
+            roplotter.runRat("RC");
+            if (d) {
+                roplotter.runRat(k+"*CO");
+            } else {
+                roplotter.runRat(k+"*CI");      
+            } 
+            if (i>360) { 
+                roplotter.runRat("PD:0, PU:1");
+                k = 6; 
+            }
+            if (i > 0 && Math.ceil(i / config.physical.boomStep) % 40 == 0) d=!d;
+            i += config.physical.boomStep;
+            if (i>720) clearInterval(intervalA);
+        }, 30);
+        
     </script>
 </body>
 </html>
