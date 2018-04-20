@@ -28,7 +28,11 @@ The project is structured as a JQuery Plugin. It can be initialised as follows:
                 "pens": [{
                     "pole": "north",    // Which half of the boom is the carriage on. North or South
                     "color": "red",     // Color of the pen
-                    "offsetX": 15,      // X Offset of pen tip from center of boom width
+                    "width": 5,         // Width of the pen tip
+                    "offset": {         // Offset of pen tip from center of boom
+                        x: 15,
+                        y: 0
+                    }      
                 }]
             },
             "clock": {
@@ -63,9 +67,6 @@ $('#roplotter').on('click', function(e, details) { console.log(details); });
 | ------------- |:-------------|
 | click         | When the visualisation is clicked on |
 | mousemove     | When the mouse moves over the visualisation |
-| boomAnimEnd   | When the boom animation ends |
-| carAnimEnd    | When the carriage animation ends |
-
 
 The **click** and **mousemove** events return details of the mouse position relative to the center of the plotter i.e. its point of pivot.
 
@@ -82,30 +83,15 @@ The **click** and **mousemove** events return details of the mouse position rela
 } 
 ```
 
-## Drawing
-If you want to display something on the drawable area i.e. demonstrate what will be drawn, you can use the following functions:
-
-### Draw Path
-Units are in mm and should be scaled to suite the dimensions of your drawing machine. You can also specify a curve function: "linear", "step", "stepBefore", "stepAfter", "basis", "cardinal", "monotoneX" and "catmullRom". See [this Dashing D3 article](https://www.dashingd3js.com/svg-paths-and-d3js) for more information.
+## Control
+The visualisation emulates the behaviour of a real plotter. To draw on the surface you must pass it [Rolang RAT code](https://github.com/jkittley/rolang). For example:
 
 ```js
-var penWidth = 15; //mm
-var penColor = "blue";
-var curveFunction='linear';
-var path = [ 
-        { "x": 1,   "y": 5},  
-        { "x": 20,  "y": 20},
-        { "x": 40,  "y": 10}, 
-        { "x": 60,  "y": 40},
-        { "x": 80,  "y": 5},  
-        { "x": 100, "y": 60}
-    ];
-$('#roplotter').drawPath(path, penWidth, penColor, curveFunction);
+$('#roplotter').run("PD:1,50*RC,20*CO");
 ```
 
-
-To erase everything in the drawable area:
+The wipe the surface clean:
 
 ```js
-$('#roplotter').drawClean();
+$('#roplotter').wipe();
 ```
