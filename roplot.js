@@ -27,13 +27,19 @@
                 "pole": "north",    // Which half of the boom is the carriage on. North or South
                 "color": "red",     // Color of the pen
                 "width": 5,
-                "offsetX": 25,      // X Offset of pen tip from center of boom width
+                "offset": {          // X Offset of pen tip from center of boom width
+                    x: 25,
+                    y: 0
+                }
             },{
                 "id": 2,
-                "pole": "south",    // Which half of the boom is the carriage on. North or South
+                "pole": "south",     // Which half of the boom is the carriage on. North or South
                 "color": "blue",     // Color of the pen
                 "width": 5,
-                "offsetX": 25,      // X Offset of pen tip from center of boom width
+                "offset": {          // X Offset of pen tip from center of boom width
+                    x: 25,
+                    y: 0
+                }
             }],
         },
         "clock": {
@@ -63,7 +69,6 @@
     var south = null;
     var drawLayer = null;
     var physicalBeltPos = config.physical.drawStart;
-
     var penState = []
 
     // ----------------------------------------------------
@@ -286,8 +291,8 @@
                 .attr('class', 'pen')
                 .attr("id", "pen-"+i)
                 .attr("r", 5)
-                .attr("cx", drawing.ox - scale(pen.offsetX))
-                .attr("cy", drawing.oy)
+                .attr("cx", drawing.ox + scale(pen.offset.x))
+                .attr("cy", drawing.oy + scale(pen.offset.y))
                 .style("fill", pen.color);
         }
     };
@@ -415,8 +420,6 @@
         };
     }
     
-
-
     var runRat = function(cmdStr) {
 
         var re = /((?<repeats>\d+)\*)?(?<cmd>PU|PD|RC|RA|CO|CI)(:(?<param>\d+))?/;
