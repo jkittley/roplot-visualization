@@ -36,31 +36,18 @@
             }
         };
         
+        
+
+        var testrat = "PU:1";
+
+
         $('#roplotter').roplot(settings)
-            .carTo(250)
-            .boomTo(45)
-            .drawPath('patha', [ 
-                { "x": 450,   "y": 0},  
-                { "x": 550,  "y": 350},
-                { "x": 900,  "y": 450},
-                { "x": 550,  "y": 550},
-                { "x": 450,  "y": 900},
-                { "x": 350,  "y": 550},
-                { "x": 0,    "y": 450}, 
-                { "x": 350,  "y": 350},
-                { "x": 450,  "y": 0}, 
-            ], 5, "green")
-            .drawPath('patha', [ 
-                { "x": 450,   "y": 0},  
-                { "x": 900,  "y": 450},
-                { "x": 450,  "y": 900},
-                { "x": 0,    "y": 450}, 
-                { "x": 450,  "y": 0}, 
-            ], 5, "blue")
             .on('click', function(e, details) { console.log(details); })
             //.on('mousemove', function(e, details) { console.log(details); })
             .on('boomAnimEnd', function(e) { console.log(e); })
-            .on('carAnimEnd', function(e) { console.log(e); });
+            .on('carAnimEnd', function(e) { console.log(e); })
+
+            .runRat(testrat);
 
 
     </script>
