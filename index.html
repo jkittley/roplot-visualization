@@ -36,9 +36,9 @@
             }
         };
         
-        
-
-        var testrat = "PU:1";
+        // var testrat = "PU:1, ";
+        var testrat = "PD:1, 20*CO, PU:1, PD:0, 350*RA, PU:0, 50*CO, PD:1, 350*RC ";
+        // var testrat = "PD:1, PU:1, 10*RC, PD:0, PU:0, 50*RC";
 
 
         $('#roplotter').roplot(settings)
@@ -46,10 +46,7 @@
             //.on('mousemove', function(e, details) { console.log(details); })
             .on('boomAnimEnd', function(e) { console.log(e); })
             .on('carAnimEnd', function(e) { console.log(e); })
-
             .runRat(testrat);
-
-
     </script>
 </body>
 </html>
