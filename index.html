@@ -28,25 +28,27 @@
             .on('click', function(e, details) { console.log(details); });
         
         // Draw a petal
-        roplotter.runRat("PD:1");
+        roplotter.run("PD:1");
         var config = roplotter.getConfig();
         var i=0;
         var k=4;
         var d=true;
         var intervalA = setInterval(function() {
-            roplotter.runRat("RC");
+            roplotter.run("RC");
             if (d) {
-                roplotter.runRat(k+"*CO");
+                roplotter.run(k+"*CO");
             } else {
-                roplotter.runRat(k+"*CI");      
+                roplotter.run(k+"*CI");      
             } 
             if (i>360) { 
-                roplotter.runRat("PD:0, PU:1");
+                roplotter.run("PD:0, PU:1");
                 k = 6; 
             }
             if (i > 0 && Math.ceil(i / config.physical.boomStep) % 40 == 0) d=!d;
             i += config.physical.boomStep;
-            if (i>720) clearInterval(intervalA);
+            if (i>720) {
+                clearInterval(intervalA);
+            }
         }, 30);
         
     </script>

@@ -395,6 +395,10 @@
     // RAT
     // ----------------------------------------------------
 
+    var drawClean = function() {
+        drawLayer.selectAll("*").remove();
+    };
+
     var drawLine = function(pen, x1, y1, x2, y2) {
         drawLayer.append("line")
             .attr("x1", x1)
@@ -493,7 +497,8 @@
         })
     };
 
-    $.fn.runRat = runRat;
+    $.fn.run = runRat;
+    $.fn.wipe = drawClean;
     $.fn.getConfig = getConfig;
 
 })($);
