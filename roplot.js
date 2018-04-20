@@ -70,6 +70,10 @@
     // Helpers
     // ----------------------------------------------------
     
+    var getConfig = function() {
+        return config;
+    }
+
     var log = function() {
         // var msg = "";
         // for (x in arguments) msg += " "+arguments[x];
@@ -125,7 +129,7 @@
 
     var stepBoom = function(direction) {
         if (direction !== ROTATE_AC && direction !== ROTATE_CW) throw "Unknown direction";
-        var d = (direction === ROTATE_AC) ? 1 : -1;
+        var d = (direction === ROTATE_AC) ? -1 : 1;
         boomAngle = boomAngle + (config.physical.boomStep * d);
         boom.attr("transform", "rotate("+boomAngle+","+drawing.ox+","+drawing.oy+")");
     }
@@ -486,10 +490,7 @@
         })
     };
 
-
-    // $.fn.drawPath  = drawPath;
-    // $.fn.drawClean = drawClean;
-
     $.fn.runRat = runRat;
+    $.fn.getConfig = getConfig;
 
 })($);

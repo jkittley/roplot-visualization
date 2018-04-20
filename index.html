@@ -17,13 +17,24 @@
 </head>
 
 <body>
-    
+     
     <div id="roplotter"></div>
     
+    <!-- <svg id="imageToPrint" class="float:right" width="100%" height="100%" viewBox="0 0 400 400" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1.5;">
+        <rect x="37" y="33" width="328" height="328" style="fill:none;stroke:black;stroke-width:1px;"/>
+    </svg> -->
+    <svg id="imageToPrint" width="100%" height="100%" viewBox="0 0 400 400" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1.5;">
+       
+        <path d="M0,100.00L0,200" style="fill:none;stroke:black;stroke-width:3.13px;"/>
+          
+    </svg>
+
     <script src="https://d3js.org/d3.v5.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
     <script src="roplot.js"></script>
+    <script src="svgToRAT.js"></script>
     <script>
+
         var settings = {
             "physical": { 
                 "boomRadius": 500,      
@@ -35,18 +46,23 @@
                 "carHeight": 40,
             }
         };
-        
-        // var testrat = "PU:1, ";
-        var testrat = "PD:1, 20*CO, PU:1, PD:0, 350*RA, PU:0, 50*CO, PD:1, 350*RC ";
-        // var testrat = "PD:1, PU:1, 10*RC, PD:0, PU:0, 50*RC";
 
-
-        $('#roplotter').roplot(settings)
+        var plotter = $('#roplotter').roplot(settings)
             .on('click', function(e, details) { console.log(details); })
             //.on('mousemove', function(e, details) { console.log(details); })
             .on('boomAnimEnd', function(e) { console.log(e); })
-            .on('carAnimEnd', function(e) { console.log(e); })
-            .runRat(testrat);
+            .on('carAnimEnd', function(e) { console.log(e); });
+        
+        var c = plotter.getConfig();
+        plotter.runRat("100*CO,PD:1");
+        
+        console.log(c.physical.drawEnd);
+
+        gen(c.physical.drawEnd, c.physical.boomStep, c.physical.carStep, function(testrat) {
+            console.log(testrat);
+            plotter.runRat(testrat);
+        }) 
+
     </script>
 </body>
 </html>
